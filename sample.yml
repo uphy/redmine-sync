@@ -1,0 +1,28 @@
+projects:
+- id: 1
+  tickets:
+  - id: 1
+    subject: parent ticket
+    description: foo
+    tracker: Docs
+    children:
+    - id: 20
+      subject: doc1
+      description: doc1
+      tracker: Docs
+      children:
+      - id: 21
+        subject: chapter1
+        description: chapter1
+        tracker: Docs
+      - id: 22
+        subject: chapter1
+        description: chapter1
+        tracker: Docs
+      - id: 23
+        subject: chapter1
+        description: chapter1aa
+        tracker: Docs
+        priority: Normal
+        start: 2018-09-20
+        end: 2018-10-20
