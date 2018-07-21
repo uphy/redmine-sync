@@ -3,26 +3,69 @@ projects:
   tickets:
   - id: 1
     subject: parent ticket
+    status: New
     description: foo
     tracker: Docs
+    start_date: "2018-07-17"
+    due_date: "2018-10-20"
+    priority: High
     children:
     - id: 20
       subject: doc1
+      status: New
       description: doc1
       tracker: Docs
+      start_date: "2018-07-17"
+      due_date: "2018-10-20"
+      priority: High
       children:
       - id: 21
         subject: chapter1
+        status: New
         description: chapter1
         tracker: Docs
+        start_date: "2018-07-17"
+        due_date: "2018-10-17"
+        priority: High
       - id: 22
-        subject: chapter1
-        description: chapter1
+        subject: chapter2
+        status: New
+        description: chapter2
         tracker: Docs
-      - id: 23
-        subject: chapter1
-        description: chapter1aa
-        tracker: Docs
+        start_date: "2018-07-17"
+        due_date: null
         priority: Normal
-        start: 2018-09-20
-        end: 2018-10-20
+      - id: 23
+        subject: chapter3
+        status: New
+        description: chapter3
+        tracker: Docs
+        start_date: "2018-09-20"
+        due_date: "2018-10-20"
+        priority: Normal
+      - id: 24
+        subject: chapter4
+        status: New
+        description: chapter4
+        tracker: Docs
+        start_date: "2018-09-20"
+        due_date: "2018-10-20"
+        priority: Normal
+      - id: 25
+        subject: chapter5
+        status: New
+        description: chapter5
+        tracker: Docs
+        start_date: "2018-09-20"
+        due_date: null
+        priority: Normal
+        children:
+        - id: 26
+          subject: chapter5-1
+          status: New
+          description: chapter5-1
+          tracker: Docs
+          start_date: "2018-09-20"
+          due_date: null
+          priority: Normal
+

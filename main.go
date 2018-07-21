@@ -3,9 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 
-	"github.com/uphy/redmine-sync/importer"
+	"github.com/mattn/go-redmine"
+
+	"strconv"
+
+	"github.com/uphy/redmine-sync/sync"
 	"github.com/urfave/cli"
 )
 
@@ -51,26 +56,71 @@ func main() {
 				},
 			},
 			Action: func(ctx *cli.Context) error {
+				var in io.Reader
 				var file string
-				if !ctx.IsSet("file") {
-					return errors.New("--file flag is requred")
+				if ctx.IsSet("file") {
+					file = ctx.String("file")
+					f, err := os.Open(file)
+					if err != nil {
+						return err
+					}
+					defer f.Close()
+					in = f
+				} else {
+					fmt.Fprintln(os.Stderr, "Reading from std-in")
+					in = os.Stdin
 				}
-				file = ctx.String("file")
-				i, err := importer.NewImporter(endpoint, apikey)
+
+				s, err := sync.New(endpoint, apikey)
 				if err != nil {
 					return err
 				}
-				return i.Import(file)
+
+				config, changed, err := s.Import(in)
+				if err != nil {
+					return err
+				}
+				if changed && file != "" {
+					return config.SaveFile(file)
+				}
+				return nil
 			},
 		},
 		cli.Command{
 			Name: "export",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name: "project",
+				},
+				cli.StringFlag{
+					Name: "status",
+				},
+			},
 			Action: func(ctx *cli.Context) error {
-				i, err := importer.NewImporter(endpoint, apikey)
+				s, err := sync.New(endpoint, apikey)
 				if err != nil {
 					return err
 				}
-				return i.Export(os.Stdout)
+				filter := &redmine.IssueFilter{}
+				if ctx.IsSet("project") {
+					id, err := s.Projects.FindIDByName(ctx.String("project"))
+					if err != nil {
+						return err
+					}
+					filter.ProjectId = strconv.Itoa(id)
+				}
+				if ctx.IsSet("status") {
+					id, err := s.Statuses.FindIDByName(ctx.String("status"))
+					if err != nil {
+						return err
+					}
+					filter.StatusId = strconv.Itoa(id)
+				}
+				config, err := s.Export(filter, os.Stdout)
+				if err != nil {
+					return err
+				}
+				return config.Save(os.Stdout)
 			},
 		},
 	}
