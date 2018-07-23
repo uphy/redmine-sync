@@ -3,9 +3,21 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/gocarina/gocsv"
+  packages = ["."]
+  revision = "a5c9099e2484f1551abb9433885e158610a25f4b"
+
+[[projects]]
+  branch = "master"
   name = "github.com/mattn/go-redmine"
   packages = ["."]
   revision = "ca35f2c569ceb7352bad2f59f3e92e58bd97bef8"
+
+[[projects]]
+  name = "github.com/urfave/cli"
+  packages = ["."]
+  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
+  version = "v1.20.0"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -16,6 +28,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4ab905a8019eec8e1dcf5ae01b18e3ac21cf842cd54e0b1e239c0b8cc67fcd5a"
+  inputs-digest = "790d1e2e797d9cdc9042f1d462db1d88296575be0a260d78cec3cbaeef153f07"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/mattn/go-redmine"
@@ -56,32 +55,33 @@ func main() {
 				},
 			},
 			Action: func(ctx *cli.Context) error {
-				var in io.Reader
 				var file string
-				if ctx.IsSet("file") {
-					file = ctx.String("file")
-					f, err := os.Open(file)
-					if err != nil {
-						return err
-					}
-					defer f.Close()
-					in = f
-				} else {
-					fmt.Fprintln(os.Stderr, "Reading from std-in")
-					in = os.Stdin
+				if !ctx.IsSet("file") {
+					return errors.New("--file is required flag")
 				}
+				file = ctx.String("file")
+				f, err := os.Open(file)
+				if err != nil {
+					return err
+				}
+				defer f.Close()
 
 				s, err := sync.New(endpoint, apikey)
 				if err != nil {
 					return err
 				}
 
-				config, changed, err := s.Import(in)
+				config, changed, err := s.Import(f)
 				if err != nil {
 					return err
 				}
 				if changed && file != "" {
-					return config.SaveFile(file)
+					f, err := os.Create(file)
+					if err != nil {
+						return err
+					}
+					defer f.Close()
+					return s.Converter.SaveConfig(f, config)
 				}
 				return nil
 			},
@@ -95,6 +95,10 @@ func main() {
 				cli.StringFlag{
 					Name: "status",
 				},
+				cli.StringFlag{
+					Name:  "format",
+					Value: "yaml",
+				},
 			},
 			Action: func(ctx *cli.Context) error {
 				s, err := sync.New(endpoint, apikey)
@@ -103,14 +107,14 @@ func main() {
 				}
 				filter := &redmine.IssueFilter{}
 				if ctx.IsSet("project") {
-					id, err := s.Projects.FindIDByName(ctx.String("project"))
+					id, err := s.Converter.Projects.FindIDByName(ctx.String("project"))
 					if err != nil {
 						return err
 					}
 					filter.ProjectId = strconv.Itoa(id)
 				}
 				if ctx.IsSet("status") {
-					id, err := s.Statuses.FindIDByName(ctx.String("status"))
+					id, err := s.Converter.Statuses.FindIDByName(ctx.String("status"))
 					if err != nil {
 						return err
 					}
@@ -120,7 +124,19 @@ func main() {
 				if err != nil {
 					return err
 				}
-				return config.Save(os.Stdout)
+				if ctx.IsSet("format") {
+					format := ctx.String("format")
+					switch format {
+					case "yaml":
+						return s.Converter.SaveConfigYAML(os.Stdout, config)
+					case "csv":
+						return s.Converter.SaveConfigCSV(os.Stdout, config)
+					default:
+						return errors.New("unsupported format: " + format)
+					}
+				} else {
+					return s.Converter.SaveConfigCSV(os.Stdout, config)
+				}
 			},
 		},
 	}

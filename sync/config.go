@@ -1,12 +1,5 @@
 package sync
 
-import (
-	"io"
-	"os"
-
-	"gopkg.in/yaml.v2"
-)
-
 type (
 	Config struct {
 		Projects []*Project `yaml:"projects"`
@@ -18,54 +11,24 @@ type (
 	}
 
 	// 変更可能な項目を定義。この構造体に含まれないフィールドについては更新されない。
+	// []Issue => Config => []Ticket => Redmine
+	// YAML =ReadConfigYAML=> Config => []Ticket => Redmine
+	// CSV =ReadConfigCSV=> Config
 	Ticket struct {
-		ID          int     `yaml:"id"`
-		Subject     *string `yaml:"subject"`
-		Status      *string `yaml:"status"`
-		Description *string `yaml:"description"`
-		Tracker     *string `yaml:"tracker"`
-		StartDate   *string `yaml:"start_date"`
-		DueDate     *string `yaml:"due_date"`
-		Priority    *string `yaml:"priority"`
+		Project     *string `yaml:"-" csv:"Project"`
+		ID          int     `yaml:"id" csv:"ID"`
+		ParentID    int     `yaml:"-" csv:"Parent ID"`
+		Subject     *string `yaml:"subject" csv:"Subject"`
+		Status      *string `yaml:"status" csv:"Status"`
+		Description *string `yaml:"description" csv:"Description"`
+		Tracker     *string `yaml:"tracker" csv:"Tracker"`
+		StartDate   *string `yaml:"start_date" csv:"Start Date"`
+		DueDate     *string `yaml:"due_date" csv:"Due Date"`
+		Priority    *string `yaml:"priority" csv:"Priority"`
 
-		Children []*Ticket `yaml:"children,omitempty"`
+		Children []*Ticket `yaml:"children,omitempty" csv:"-"`
 	}
 )
-
-func ReadConfigFile(file string) (*Config, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	return ReadConfig(f)
-}
-
-func ReadConfig(reader io.Reader) (*Config, error) {
-	var c Config
-	decoder := yaml.NewDecoder(reader)
-	if err := decoder.Decode(&c); err != nil {
-		return nil, err
-	}
-	return &c, nil
-}
-
-func (c *Config) SaveFile(file string) error {
-	f, err := os.Create(file)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return c.Save(f)
-}
-
-func (c *Config) Save(writer io.Writer) error {
-	encoder := yaml.NewEncoder(writer)
-	if err := encoder.Encode(c); err != nil {
-		return err
-	}
-	return nil
-}
 
 func (c *Config) findOrCreateProject(id int) *Project {
 	for _, p := range c.Projects {
