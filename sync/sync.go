@@ -36,17 +36,33 @@ func (s *Sync) Export(filter *redmine.IssueFilter, out io.Writer) (*Config, erro
 	return s.Converter.Convert(issues)
 }
 
-func (s *Sync) Import(file *os.File) (config *Config, changed bool, err error) {
+func (s *Sync) Import(file *os.File, base *os.File) (config *Config, changed bool, err error) {
+	var configBase *Config
+	if base != nil {
+		c, err := s.Converter.ReadConfig(base)
+		if err != nil {
+			return nil, false, err
+		}
+		configBase = c
+	} else {
+		configBase = &Config{}
+		configBase.Projects = []*Project{}
+	}
 	config, err = s.Converter.ReadConfig(file)
 	if err != nil {
 		return nil, false, err
 	}
 
+	changes, err := DiffTickets(s.Converter, configBase, config)
+	if err != nil {
+		return nil, false, err
+	}
+
 	changed = false
-	for _, project := range config.Projects {
-		projectID := project.ID
-		for _, ticket := range project.Tickets {
-			ticketChanged, err := s.createTicket(projectID, 0, ticket)
+	for _, change := range changes {
+		switch change.change {
+		case ChangeAdded, ChangeUpdated:
+			ticketChanged, err := s.createTicket(change.ticket2)
 			if err != nil {
 				return nil, false, err
 			}
@@ -58,13 +74,12 @@ func (s *Sync) Import(file *os.File) (config *Config, changed bool, err error) {
 	return
 }
 
-func (s *Sync) createTicket(projectID int, parentTicketID int, ticket *Ticket) (bool, error) {
+func (s *Sync) createTicket(ticket *Ticket) (bool, error) {
 	var issue *redmine.Issue
 	changed := false
 	if ticket.ID == 0 {
 		// create
-		issue = &redmine.Issue{ProjectId: projectID}
-		issue.ParentId = parentTicketID
+		issue = &redmine.Issue{}
 		if err := s.Converter.mergeTicketToIssue(ticket, issue); err != nil {
 			return changed, err
 		}
@@ -82,7 +97,6 @@ func (s *Sync) createTicket(projectID int, parentTicketID int, ticket *Ticket) (
 		if err != nil {
 			return false, err
 		}
-		updating.ParentId = parentTicketID
 		if err := s.Converter.mergeTicketToIssue(ticket, updating); err != nil {
 			return changed, err
 		}
@@ -94,7 +108,7 @@ func (s *Sync) createTicket(projectID int, parentTicketID int, ticket *Ticket) (
 
 	// create/update children
 	for _, child := range ticket.Children {
-		childChanged, err := s.createTicket(projectID, issue.Id, child)
+		childChanged, err := s.createTicket(child)
 		if err != nil {
 			return false, err
 		}

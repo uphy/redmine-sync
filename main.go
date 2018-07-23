@@ -53,6 +53,9 @@ func main() {
 				cli.StringFlag{
 					Name: "file,f",
 				},
+				cli.StringFlag{
+					Name: "base,b",
+				},
 			},
 			Action: func(ctx *cli.Context) error {
 				var file string
@@ -66,12 +69,22 @@ func main() {
 				}
 				defer f.Close()
 
+				var base *os.File = nil
+				if ctx.IsSet("base") {
+					f, err := os.Open(ctx.String("base"))
+					if err != nil {
+						return err
+					}
+					defer f.Close()
+					base = f
+				}
+
 				s, err := sync.New(endpoint, apikey)
 				if err != nil {
 					return err
 				}
 
-				config, changed, err := s.Import(f)
+				config, changed, err := s.Import(f, base)
 				if err != nil {
 					return err
 				}
