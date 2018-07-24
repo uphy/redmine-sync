@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/gocarina/gocsv"
-	redmine "github.com/mattn/go-redmine"
+	redmine "github.com/uphy/go-redmine"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -163,6 +163,11 @@ func (c *Converter) mergeTicketToIssue(src *Ticket, dst *redmine.Issue) error {
 		dst.ProjectId = id
 	}
 	dst.ParentId = src.ParentID
+	if src.ParentID == 0 {
+		dst.Parent = nil
+	} else {
+		dst.Parent = &redmine.Id{Id: src.ParentID}
+	}
 	if src.Subject != nil {
 		dst.Subject = *src.Subject
 	}
@@ -284,6 +289,18 @@ func (c *Converter) toFlat(config *Config) ([]*Ticket, error) {
 			tickets = c.collectTickets(tickets, ticket, projectName)
 		}
 	}
+	sort.Slice(tickets, func(i, j int) bool {
+		p1 := *tickets[i].Project
+		p2 := *tickets[j].Project
+		c := strings.Compare(p1, p2)
+		switch c {
+		case 1:
+			return false
+		case -1:
+			return true
+		}
+		return tickets[i].ID < tickets[j].ID
+	})
 	return tickets, nil
 }
 

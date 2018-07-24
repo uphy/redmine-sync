@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mattn/go-redmine"
+	redmine "github.com/uphy/go-redmine"
 
 	"strconv"
 
@@ -48,6 +48,24 @@ func main() {
 
 	app.Commands = []cli.Command{
 		cli.Command{
+			Name: "watch",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name: "file,f",
+				},
+			},
+			Action: func(ctx *cli.Context) error {
+				if !ctx.IsSet("file") {
+					return errors.New("--file is required flag")
+				}
+				s, err := sync.New(endpoint, apikey)
+				if err != nil {
+					return err
+				}
+				return s.Watch(ctx.String("file"))
+			},
+		},
+		cli.Command{
 			Name: "import",
 			Flags: []cli.Flag{
 				cli.StringFlag{
@@ -69,7 +87,7 @@ func main() {
 				}
 				defer f.Close()
 
-				var base *os.File = nil
+				var base *os.File
 				if ctx.IsSet("base") {
 					f, err := os.Open(ctx.String("base"))
 					if err != nil {
@@ -84,7 +102,7 @@ func main() {
 					return err
 				}
 
-				config, changed, err := s.Import(f, base)
+				config, changed, err := s.ImportFile(f, base)
 				if err != nil {
 					return err
 				}

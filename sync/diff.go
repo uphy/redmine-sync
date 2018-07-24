@@ -3,9 +3,9 @@ package sync
 type (
 	Change      string
 	IssueChange struct {
-		ticket1 *Ticket
-		ticket2 *Ticket
-		change  Change
+		Ticket1 *Ticket
+		Ticket2 *Ticket
+		Change  Change
 	}
 )
 
@@ -17,6 +17,9 @@ const (
 
 func DiffTickets(converter *Converter, config1 *Config, config2 *Config) ([]IssueChange, error) {
 	ticketMap := func(config *Config) (map[int]*Ticket, error) {
+		if config == nil || config.Projects == nil {
+			return map[int]*Ticket{}, nil
+		}
 		tickets, err := converter.toFlat(config)
 		if err != nil {
 			return nil, err

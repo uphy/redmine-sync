@@ -1,6 +1,6 @@
 [[constraint]]
-  branch = "master"
-  name = "github.com/mattn/go-redmine"
+  branch = "fix/reset-parent"
+  name = "github.com/uphy/go-redmine"
 
 [[constraint]]
   name = "gopkg.in/yaml.v2"
