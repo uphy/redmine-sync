@@ -88,6 +88,9 @@ func equals(t1 *Ticket, t2 *Ticket) bool {
 	if !equalsString(t1.Tracker, t2.Tracker) {
 		return false
 	}
+	if !equalsString(t1.Assignee, t2.Assignee) {
+		return false
+	}
 	return true
 }
 

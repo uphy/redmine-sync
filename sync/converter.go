@@ -21,6 +21,7 @@ type (
 		Priorities *Names
 		Projects   *Names
 		Statuses   *Names
+		Users      *Names
 	}
 	Names struct {
 		names []redmine.IdName
@@ -119,6 +120,21 @@ func newConverter(client *redmine.Client) *Converter {
 			}
 			return names, nil
 		}},
+		Users: &Names{nil, func() ([]redmine.IdName, error) {
+			list, err := client.Users()
+			if err != nil {
+				return nil, err
+			}
+
+			names := []redmine.IdName{}
+			for _, item := range list {
+				names = append(names, redmine.IdName{
+					Id:   item.Id,
+					Name: item.Firstname + " " + item.Lastname,
+				})
+			}
+			return names, nil
+		}},
 	}
 }
 
@@ -126,13 +142,15 @@ func (c *Converter) Convert(issues []redmine.Issue) (*Config, error) {
 	tickets := []*Ticket{}
 	for _, issue := range issues {
 		t := &Ticket{ID: issue.Id}
-		c.mergeIssueToTicket(issue, t)
+		if err := c.mergeIssueToTicket(issue, t); err != nil {
+			return nil, err
+		}
 		tickets = append(tickets, t)
 	}
 	return c.toHierarchical(tickets)
 }
 
-func (c *Converter) mergeIssueToTicket(src redmine.Issue, dst *Ticket) {
+func (c *Converter) mergeIssueToTicket(src redmine.Issue, dst *Ticket) error {
 	dst.Project = &src.Project.Name
 	if src.Parent != nil {
 		dst.ParentID = src.Parent.Id
@@ -151,6 +169,14 @@ func (c *Converter) mergeIssueToTicket(src redmine.Issue, dst *Ticket) {
 	if src.DueDate != "" {
 		dst.DueDate = &src.DueDate
 	}
+	if src.AssignedTo != nil {
+		name, err := c.Users.FindNameByID(src.AssignedTo.Id)
+		if err != nil {
+			return err
+		}
+		dst.Assignee = &name
+	}
+	return nil
 }
 
 func (c *Converter) mergeTicketToIssue(src *Ticket, dst *redmine.Issue) error {
@@ -200,6 +226,21 @@ func (c *Converter) mergeTicketToIssue(src *Ticket, dst *redmine.Issue) error {
 	}
 	if src.DueDate != nil {
 		dst.DueDate = *src.DueDate
+	}
+	if src.Assignee != nil {
+		id, err := c.Users.FindIDByName(*src.Assignee)
+		if err != nil {
+			return err
+		}
+		dst.AssignedToId = id
+		if id == 0 {
+			dst.AssignedTo = nil
+		} else {
+			dst.AssignedTo = &redmine.IdName{
+				Id:   id,
+				Name: *src.Assignee,
+			}
+		}
 	}
 	return nil
 }

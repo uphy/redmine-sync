@@ -1,5 +1,5 @@
 [[constraint]]
-  branch = "fix/reset-parent"
+  branch = "redmine-sync"
   name = "github.com/uphy/go-redmine"
 
 [[constraint]]

@@ -55,6 +55,7 @@ type Issue struct {
 	Author       *IdName        `json:"author"`
 	FixedVersion *IdName        `json:"fixed_version"`
 	AssignedTo   *IdName        `json:"assigned_to"`
+	AssignedToId int            `json:"assigned_to_id,omitempty"`
 	Category     *IdName        `json:"category"`
 	CategoryId   int            `json:"category_id"`
 	Notes        string         `json:"notes"`
@@ -249,12 +250,24 @@ func (issue Issue) MarshalJSON() ([]byte, error) {
 		parentIssueID = &id
 	}
 
+	var assignedToID *string
+	if issue.AssignedTo == nil {
+		// reset assignee
+		id := ""
+		assignedToID = &id
+	} else if issue.AssignedToId > 0 {
+		id := strconv.Itoa(issue.AssignedToId)
+		assignedToID = &id
+	}
+	fmt.Println(*assignedToID)
 	return json.Marshal(&struct {
 		Issue2
-		ParentId *string `json:"parent_issue_id,omitempty"`
+		ParentId     *string `json:"parent_issue_id,omitempty"`
+		AssignedToId *string `json:"assigned_to_id,omitempty"`
 	}{
-		Issue2:   Issue2(issue),
-		ParentId: parentIssueID,
+		Issue2:       Issue2(issue),
+		ParentId:     parentIssueID,
+		AssignedToId: assignedToID,
 	})
 }
 

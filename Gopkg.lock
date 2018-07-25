@@ -14,16 +14,10 @@
   revision = "a5c9099e2484f1551abb9433885e158610a25f4b"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mattn/go-redmine"
-  packages = ["."]
-  revision = "ca35f2c569ceb7352bad2f59f3e92e58bd97bef8"
-
-[[projects]]
-  branch = "fix/reset-parent"
+  branch = "redmine-sync"
   name = "github.com/uphy/go-redmine"
   packages = ["."]
-  revision = "1dbc4d9f4cc866d4fae001e3b373e194ece3046d"
+  revision = "bc3ccfbd5df1d874a768e5286966c60021451a23"
 
 [[projects]]
   name = "github.com/urfave/cli"
@@ -46,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8354dcaabeb5f0b800fd525cc8441630769ea0756009deee28f448f748f386f5"
+  inputs-digest = "aa29dd64814aa94ed40a603479148cb7c557c6dee0ad5fe2a07f859aea1a8d38"
   solver-name = "gps-cdcl"
   solver-version = 1

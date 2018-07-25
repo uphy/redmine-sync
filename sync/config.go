@@ -19,6 +19,7 @@ type (
 		ID          int     `yaml:"id" csv:"ID"`
 		ParentID    int     `yaml:"-" csv:"Parent ID"`
 		Subject     *string `yaml:"subject" csv:"Subject"`
+		Assignee    *string `yaml:"assignee" csv:"Assignee"`
 		Status      *string `yaml:"status" csv:"Status"`
 		Description *string `yaml:"description" csv:"Description"`
 		Tracker     *string `yaml:"tracker" csv:"Tracker"`
