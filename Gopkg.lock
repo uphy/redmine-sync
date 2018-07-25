@@ -17,7 +17,7 @@
   branch = "redmine-sync"
   name = "github.com/uphy/go-redmine"
   packages = ["."]
-  revision = "bc3ccfbd5df1d874a768e5286966c60021451a23"
+  revision = "2ec7440f6d36218e16844a5f5f204c541737c952"
 
 [[projects]]
   name = "github.com/urfave/cli"

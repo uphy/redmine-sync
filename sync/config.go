@@ -21,6 +21,7 @@ type (
 		Subject     *string `yaml:"subject" csv:"Subject"`
 		Assignee    *string `yaml:"assignee" csv:"Assignee"`
 		Status      *string `yaml:"status" csv:"Status"`
+		DoneRatio   *int    `yaml:"done_ratio" csv:"Done Ratio"`
 		Description *string `yaml:"description" csv:"Description"`
 		Tracker     *string `yaml:"tracker" csv:"Tracker"`
 		StartDate   *string `yaml:"start_date" csv:"Start Date"`

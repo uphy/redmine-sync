@@ -68,6 +68,7 @@ type Issue struct {
 	CustomFields []*CustomField `json:"custom_fields,omitempty"`
 	Uploads      []*Upload      `json:"uploads"`
 	Journals     []*Journal     `json:"journals"`
+	DoneRatio    int            `json:"done_ratio"`
 }
 
 type IssueFilter struct {
@@ -259,7 +260,6 @@ func (issue Issue) MarshalJSON() ([]byte, error) {
 		id := strconv.Itoa(issue.AssignedToId)
 		assignedToID = &id
 	}
-	fmt.Println(*assignedToID)
 	return json.Marshal(&struct {
 		Issue2
 		ParentId     *string `json:"parent_issue_id,omitempty"`

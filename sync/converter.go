@@ -176,6 +176,7 @@ func (c *Converter) mergeIssueToTicket(src redmine.Issue, dst *Ticket) error {
 		}
 		dst.Assignee = &name
 	}
+	dst.DoneRatio = &src.DoneRatio
 	return nil
 }
 
@@ -228,9 +229,15 @@ func (c *Converter) mergeTicketToIssue(src *Ticket, dst *redmine.Issue) error {
 		dst.DueDate = *src.DueDate
 	}
 	if src.Assignee != nil {
-		id, err := c.Users.FindIDByName(*src.Assignee)
-		if err != nil {
-			return err
+		var id int
+		if *src.Assignee == "" {
+			id = 0
+		} else {
+			i, err := c.Users.FindIDByName(*src.Assignee)
+			if err != nil {
+				return err
+			}
+			id = i
 		}
 		dst.AssignedToId = id
 		if id == 0 {
@@ -241,6 +248,9 @@ func (c *Converter) mergeTicketToIssue(src *Ticket, dst *redmine.Issue) error {
 				Name: *src.Assignee,
 			}
 		}
+	}
+	if src.DoneRatio != nil {
+		dst.DoneRatio = *src.DoneRatio
 	}
 	return nil
 }

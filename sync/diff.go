@@ -91,6 +91,9 @@ func equals(t1 *Ticket, t2 *Ticket) bool {
 	if !equalsString(t1.Assignee, t2.Assignee) {
 		return false
 	}
+	if t1.DoneRatio != t2.DoneRatio {
+		return false
+	}
 	return true
 }
 
