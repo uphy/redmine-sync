@@ -91,13 +91,23 @@ func equals(t1 *Ticket, t2 *Ticket) bool {
 	if !equalsString(t1.Assignee, t2.Assignee) {
 		return false
 	}
-	if t1.DoneRatio != t2.DoneRatio {
+	if !equalsInt(t1.DoneRatio, t2.DoneRatio) {
 		return false
 	}
 	return true
 }
 
 func equalsString(s1, s2 *string) bool {
+	if s1 == nil && s2 == nil {
+		return true
+	}
+	if s1 != nil && s2 != nil {
+		return *s1 == *s2
+	}
+	return false
+}
+
+func equalsInt(s1, s2 *int) bool {
 	if s1 == nil && s2 == nil {
 		return true
 	}

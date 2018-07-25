@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	"log"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/uphy/go-redmine"
 )
@@ -11,13 +13,16 @@ import (
 type Sync struct {
 	client    *redmine.Client
 	Converter *Converter
+	logger    *log.Logger
 }
 
 func New(endpoint string, apiKey string) (*Sync, error) {
 	client := redmine.NewClient(endpoint, apiKey)
+	logger := log.New(os.Stderr, "[sync]", log.LstdFlags|log.Lmicroseconds)
 	return &Sync{
 		client:    client,
 		Converter: newConverter(client),
+		logger:    logger,
 	}, nil
 }
 
@@ -37,7 +42,7 @@ func (s *Sync) Export(filter *redmine.IssueFilter, out io.Writer) (*Config, erro
 	return s.Converter.Convert(issues)
 }
 
-func (s *Sync) Watch(file string) error {
+func (s *Sync) Watch(file string, ignoreImportError bool) error {
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -61,6 +66,7 @@ func (s *Sync) Watch(file string) error {
 		if evt.Op != fsnotify.Write {
 			continue
 		}
+		s.logger.Println("Detected file modification.")
 		if _, err := fileForRead.Seek(0, 0); err != nil {
 			return err
 		}
@@ -68,11 +74,17 @@ func (s *Sync) Watch(file string) error {
 		if err != nil {
 			return err
 		}
+		s.logger.Println("Importing the changes...")
 		changed, err := s.Import(config2, config)
 		if err != nil {
+			if ignoreImportError {
+				s.logger.Printf("Failed to import: %s", err)
+				continue
+			}
 			return err
 		}
 		if changed {
+			s.logger.Println("Rewriting the config file...")
 			f, err := os.Create(file)
 			if err != nil {
 				return err
@@ -83,6 +95,7 @@ func (s *Sync) Watch(file string) error {
 			f.Close()
 		}
 		config = config2
+		s.logger.Println("Successfully applied the changes.")
 	}
 	return nil
 }
@@ -97,6 +110,7 @@ func (s *Sync) Import(config *Config, base *Config) (changed bool, err error) {
 	for _, change := range changes {
 		switch change.Change {
 		case ChangeAdded, ChangeUpdated:
+			s.logger.Printf("Updating issue #%d...", change.Ticket2.ID)
 			ticketChanged, err := s.createTicket(change.Ticket2)
 			if err != nil {
 				return false, err
@@ -162,17 +176,6 @@ func (s *Sync) createTicket(ticket *Ticket) (bool, error) {
 			return changed, err
 		}
 		issue = updating
-	}
-
-	// create/update children
-	for _, child := range ticket.Children {
-		childChanged, err := s.createTicket(child)
-		if err != nil {
-			return false, err
-		}
-		if childChanged {
-			changed = true
-		}
 	}
 	return changed, nil
 }

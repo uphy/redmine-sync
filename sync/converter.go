@@ -69,7 +69,12 @@ func (t *Names) FindIDByName(name string) (int, error) {
 			}
 		}
 	}
-	return 0, errors.New("no such name: " + name)
+
+	names := []string{}
+	for _, n := range t.names {
+		names = append(names, n.Name)
+	}
+	return 0, fmt.Errorf("no such name: %s, available names: %v", name, names)
 }
 
 func newConverter(client *redmine.Client) *Converter {
